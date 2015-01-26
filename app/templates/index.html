@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="container">
+    <h1>Välkommen!</h1>
+    <p>Välj de personer som ska repa tillsammans och klicka sen på "Hitta reptider" så får du förslag på tider då samtliga personer inte har lektion</p>
+                    <form role="search" action="" method="POST">
+                        <div class="form-group">
+                            <select onchange="this.form.submit()" class="selectpicker" data-live-search="true" name="person">
+                                {% for id, name in [(1, 'Joe'), (2,'Biden')] %}
+                                <option value="{{ id }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+</div>
+{% endblock %}

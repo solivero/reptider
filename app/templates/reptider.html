@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="container">
+                    <form role="search" action="" method="POST">
+                        <div class="form-group">
+                            <select onchange="this.form.submit()" class="selectpicker" data-live-search="true" name="add">
+                                {% for id, name in [(1, 'Joe'), (2,'Biden')] %}
+                                <option value="{{ id }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                         <div class="row">
+                                           <div class="col-md-5">          
+                                                <ul class="list-group">         
+                                                 {% for person in persons %}
+                                                      <li class="list-group-item">    
+                                                           {{ person.name }}    
+                                                            <button type="submit" value="{{ person.name }}" name="remove" class="pull-right" style="background: none; border: none" aria-hidden="true"><span class="glyphicon glyphicon-remove-sign"></span></button>
+                                                         </li>
+                                                      {% endfor %}                    
+                                                       </ul>
+                                                    </div>
+                                                </div>
+
+                    </form>
+                </div>
+{% endblock %}

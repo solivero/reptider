@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>       <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>       <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>       <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>{% block title %}{{ page_title }}{% endblock %}</title>
+    <meta name="description" content="Verktyg för att hitta reptider på rytmus">
+    <meta name="author" content="Oliver Petri">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-select.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-datetimepicker.css') }}">
+    {% endblock %}
+
+    {% block css_style %}
+    {% endblock %}
+
+    {% block js_top %}
+    <script src="//upcdn.b0.upaiyun.com/libs/modernizr/modernizr-2.6.2.min.js"></script>
+    {% endblock %}
+</head>
+<body>
+
+    <div id='wrap'>
+        {% block topbar %}
+        {% set nav = [
+            ('index', 'Hem'),
+        ] -%}
+        {% set active = active|default('index') -%}
+        {% from 'bootstrapform.html' import form_field %}
+        <nav class="navbar navbar-default" role="navigation">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">Reptider</a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        {% for id, caption in nav %}
+                        <li class="{% if id == active %}active{% endif %}"><a href="{{ url_for(id) }}">{{ caption }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    <!-- TA DET HÄR!!!!!!!!!!!!!! 
+                    <form class="navbar-form navbar-left" role="search" action="/" method="GET">
+                        <div class="form-group">
+                            <select class="selectpicker" data-live-search="true" name="person">
+                                {% for id, name in g.persons %}
+                                <option value="{{ id }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Visa agenda</button>
+                        </div>
+                    </form>
+                    -->
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        {% endblock %}
+
+        {% block flash_message %}
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                <div class="container">
+                    <div id='flash_message_container'>
+                        {% for category, msg in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <button type="button" class="close" data-dismiss="alert">×</button>
+                                {{ msg }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endwith %}
+        {% endblock %}
+
+        {% block container %}
+        <div class="container">
+
+            {% block top %}
+                {% if tabs %}
+                <div>
+                    <ul class="nav nav-tabs">
+                        {% for tab, link in tabs %}
+                        <li class="{% if active == tab %}active{% endif %}">
+                            <a href="{{ link }}">{{ tab|capitalize }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            {% endblock %}
+
+            {% block body %}
+            {% endblock %}
+
+        </div>
+        {% endblock %}
+        <div id="push"></div>
+    </div>
+
+    <nav class="navbar navbar-default navbar-fixed-bottom"
+            <p class="muted credit">© 2015 Oliver Petri</p>
+    </nav>
+
+    {% block js_btm %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/moment.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-select.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-datetimepicker.js') }}"></script>
+    <script type="text/javascript">
+        window.onload=function(){
+            $('#datetimepicker').datetimepicker({
+                pickTime: false,
+                daysOfWeekDisabled: [0,6]
+            });
+            $('.selectpicker').selectpicker();
+        };
+      </script>
+    {% endblock %}
+
+    {% block ga %}
+    {% endblock %}
+</body>
+</html>
