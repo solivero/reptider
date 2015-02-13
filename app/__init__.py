@@ -9,5 +9,4 @@ app.url_map.converters['list'] = ListConverter
 
 import views, models
 
-db.drop_all()
 db.create_all()

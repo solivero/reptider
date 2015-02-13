@@ -1,16 +1,19 @@
 {% extends 'base.html' %}
 {% block body %}
 <div class="container">
-    <h1>Välkommen!</h1>
-    <p>Välj de personer som ska repa tillsammans och klicka sen på "Hitta reptider" så får du förslag på tider då samtliga personer inte har lektion</p>
-                    <form role="search" action="" method="POST">
-                        <div class="form-group">
-                            <select onchange="this.form.submit()" class="selectpicker" data-live-search="true" name="person">
-                                {% for id, name in [(1, 'Joe'), (2,'Biden')] %}
-                                <option value="{{ id }}">{{ name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </form>
+    <div class="jumbotron">
+        <h1>Välkommen!</h1>
+        <p>Välj de personer som ska repa tillsammans genom att söka på dom och - badabing badabong - så får du ett schema med tider då samtliga personer inte har lektion i minst 45 minuter. Dubbelkolla alltid så att alla verkligen är tillgängliga efter du valt en tid då det kan finnas buggar!</p>
+        <form role="search" action="" method="POST">
+            <div class="form-group">
+                <select onchange="this.form.submit()" class="selectpicker" data-live-search="true" name="person" data-style="btn-primary">
+                    <option value="">Välj elev</option>
+                    {% for student in students %}
+                    <option value="{{ student.id }}">{{ student._class }} {{ student.first_name }} {{ student.last_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

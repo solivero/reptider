@@ -1,27 +1,68 @@
 {% extends 'base.html' %}
 {% block body %}
 <div class="container">
-                    <form role="search" action="" method="POST">
-                        <div class="form-group">
-                            <select onchange="this.form.submit()" class="selectpicker" data-live-search="true" name="add">
-                                {% for id, name in [(1, 'Joe'), (2,'Biden')] %}
-                                <option value="{{ id }}">{{ name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                         <div class="row">
-                                           <div class="col-md-5">          
-                                                <ul class="list-group">         
-                                                 {% for person in persons %}
-                                                      <li class="list-group-item">    
-                                                           {{ person.name }}    
-                                                            <button type="submit" value="{{ person.name }}" name="remove" class="pull-right" style="background: none; border: none" aria-hidden="true"><span class="glyphicon glyphicon-remove-sign"></span></button>
-                                                         </li>
-                                                      {% endfor %}                    
-                                                       </ul>
-                                                    </div>
-                                                </div>
-
-                    </form>
+    <form role="search" action="" method="POST">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <select onchange="this.form.submit()" class="selectpicker" data-live-search="true" name="add" data-width="100%" data-style="btn-primary">
+                        <option value="">Lägg till elev</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}">{{ student._class }} {{ student.first_name }} {{ student.last_name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">          
+                <ul class="list-group">         
+                {% for person in selected %}
+                    <li class="list-group-item">    
+                        {{ person.first_name }} {{ person.last_name }}    
+                        <button type="submit" value="{{ person.id }}" name="remove" class="pull-right" style="background: none; border: none" aria-hidden="true">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                    </li>
+                {% endfor %}                    
+                </ul>
+            </div>
+            <div class="col-md-3">
+            </div>
+        </div>
+    </form>
+    <table class="schema" cellpadding=0 cellspacing=0>
+        {% set days = ('Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag') %}
+        <tr>
+            <td></td>
+            {% for day in days %}
+            <td class="schema-header"><h2 class="schema-header-text">{{ day }}</h2></td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td style="width:60px;">
+                <div class="schema-time-container">
+                {% for i in range(21-8) %}
+                    <div class="schema-time">
+                        <p>{{ i+8 }}:00</p>
+                    </div>
+                {% endfor %}
+                </div>
+            </td>
+            {% for day in week %}
+            <td class="schema-cell">
+                <div class="schema-col-container">
+                    {% for start, end in day %}
+                    {% set from_top = start[0] - 8*60 %}
+                    {% set duration = end[0] - start[0] %}
+                    <div class="alert-info schema-col-element" style="height:{{ duration }}px;top:{{ from_top }}px;">
+                        <p>{{ start[1] }} - {{ end[1] }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
+    </table>
+</div>
 {% endblock %}
