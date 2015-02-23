@@ -4,7 +4,7 @@ from models import Student
 from flask import render_template, request, g, flash, redirect
 import schema
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/reptider/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         print request.form
@@ -51,9 +51,9 @@ def reptider(persons):
                            selected=selected,
                            week=week)
 
-@app.route('/reptider/')
+@app.route('/')
 def no_persons():
-    return redirect('/')
+    return redirect('/reptider/')
 
 @app.route('/scrape/')
 def scrape():

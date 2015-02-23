@@ -210,7 +210,7 @@ def get_start(selected, day_index, start, end):
 def get_end(selected, day_index, start, end):
     print "Search end, %s %s dag %d" % (to_timestring(start), to_timestring(end), day_index)
     for stud in selected:
-        for lesson in stud.lessons.filter_by(day=day_index).all():
+        for lesson in stud.lessons.filter_by(day=day_index).order_by(Lesson.start_min).all():
             print "Testar tid {} lektion {} - {}".format(to_timestring(start),
                                                          to_timestring(lesson.start_min),
                                                          to_timestring(lesson.end_min))
