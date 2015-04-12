@@ -1,5 +1,5 @@
 from sys import argv
-from app import app
+from app import app, schema
 
 commands = ['run']
 if len(argv) == 1:
@@ -8,6 +8,8 @@ if len(argv) == 1:
 else:
     if argv[1] == "run":
         app.run()
+    elif argv[1] == "scrape":
+        schema.main()
     else:
         print "Unknown command"
         for command in commands:

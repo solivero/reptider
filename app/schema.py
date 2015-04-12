@@ -139,7 +139,7 @@ def scrape_lessons(resume=True):
             x_values = (day_x_left + int(day_width/1.8), day_x_left + int(day_width/1.3))
             for x in x_values:
                 for i in range(10):
-                    y = i*(height/10)+23
+                    y = i*(height/20)+23
                     click_data = click_basedata.format(x=x,
                                                        y=y,
                                                        p_id=student.schedule_id)
@@ -198,7 +198,7 @@ def get_start(selected, day_index, start, end):
     print "Search start, %s %s dag %d" % (to_timestring(start), to_timestring(end), day_index)
     for stud in selected:
         for lesson in stud.lessons.filter_by(day=day_index).all():
-            print "Testar tid {} lektion {} - {}".format(to_timestring(start),
+            print u"Testar tid {} lektion {} - {}".format(to_timestring(start),
                                          to_timestring(lesson.start_min),
                                          to_timestring(lesson.end_min))
             if lesson.start_min <= start and lesson.end_min > start:
