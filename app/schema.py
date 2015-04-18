@@ -136,7 +136,7 @@ def scrape_lessons(resume=True, start_id=0):
             day_width = width/5
             day_x_left = day*(day_width)
             subdivide_y = 20
-            x_values = (day_x_left + int(day_width/1.8), day_x_left + int(day_width/1.3))
+            x_values = (day_x_left + int(day_width/3.2), day_x_left + int(day_width/2), day_x_left + int(day_width/1.3))
             for x in x_values:
                 for i in range(subdivide_y):
                     y = i*(height/subdivide_y)+23
