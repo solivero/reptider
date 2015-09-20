@@ -15,20 +15,24 @@ click_basedata = postdata['click']
 elev_basedata = postdata['elev']
 width = 1820
 height = 573
+school_id = "L000575"
+code = "826939"
 urls = {}
 
 
 def scrape_IDs():
     if Student.query.count() != 0:
         return
-    req = Request("POST",
-                  urls['schema'],
-                  data=elev_basedata.format(
-                           p_id="8A553145-C12F-409B-A8DD-2FD5BC8DD9EA")
-                  )
-    resp = send(s, req, name="Elev")
+    req = Request(
+        "POST",
+        urls['schema'],
+        data=elev_basedata.format(
+            school_id=school_id,
+            p_id="BFBA0FBE-9726-4BAF-A323-466C69AF51D5"
+        )
+    )
+    resp = send(s, req, name="ID_SCRAPE")
     soup = BeautifulSoup(resp.text)
-    #print(soup)
     for find in soup.findAll("option"):
         parts = re.match(r"(\w+)\s+(\w+\s?\w*)\,\s(\w+)",
                          find.string,
@@ -46,9 +50,9 @@ def scrape_IDs():
 
 def send(s, req, verbose=False, name="", save=False):
     prep = s.prepare_request(req)
-    if (prep.body):
-        prep.headers['Content-Length']= len(prep.body)
-    resp = s.send(prep, timeout=10)
+    #if (prep.body):
+        #prep.headers['Content-Length']= len(prep.body)
+    resp = s.send(prep, allow_redirects=True, timeout=10)
     html = resp.text.encode('utf8')
     if save:
         f = open("{}.html".format(name), "wb")
@@ -64,7 +68,8 @@ def send(s, req, verbose=False, name="", save=False):
                 "status": resp.status_code,
                 "reason": resp.reason,
                 "client-headers": prep.headers,
-                "length": len(html)}
+                "length": len(html),
+        }
         for key, value in info.iteritems():
             print "{}\t{}: {}".format(name, key, value)
     return resp
@@ -81,7 +86,7 @@ def to_timestring(timestamp):
 def save_lesson(day, student, html, verbose=True):
     soup = BeautifulSoup(html)
     data = [unicode(info.text) for info in soup.find_all('td')]
-    # print(data)
+    #print data
     existing = student.lessons.filter_by(day=day,
                                          start_min=to_timestamp(data[0][:5])
                                          ).first()
@@ -107,20 +112,21 @@ def save_lesson(day, student, html, verbose=True):
     db.session.add(lesson)
     db.session.commit()
 
-
 def click(data):
     req = Request("POST",
                   urls['schema'],
                   data=data,
                   headers={"Content-Length": len(data)})
-    resp = send(s, req, name="Click", verbose=False)
+    resp = send(s, req, name="Click")
+    #print resp.text
     if resp.history:
         req = Request("GET",
                       urls['lesson'],
                       headers={'Referer': urls['schema']})
-        return send(s, req, name="Lesson", verbose=False)
+        new_resp = send(s, req, name="Lesson")
+        #print new_resp.text
+        return new_resp
     return None
-
 
 def scrape_lessons(resume=True, start_id=0):
     if resume:
@@ -137,12 +143,16 @@ def scrape_lessons(resume=True, start_id=0):
             day_x_left = day*(day_width)
             subdivide_y = 20
             x_values = (day_x_left + int(day_width/3.2), day_x_left + int(day_width/2), day_x_left + int(day_width/1.3))
+            print "Day {}".format(day)
             for x in x_values:
                 for i in range(subdivide_y):
                     y = i*(height/subdivide_y)+23
-                    click_data = click_basedata.format(x=x,
-                                                       y=y,
-                                                       p_id=student.schedule_id)
+                    click_data = click_basedata.format(
+                        school_id=school_id,
+                        x=x,
+                        y=y,
+                        p_id=student.schedule_id
+                    )
                     lesson = click(click_data)
                     if lesson:
                         save_lesson(day, student, lesson.text)
@@ -159,18 +169,40 @@ def make_session():
     s = Session()
     s.headers = json.load(open('app/static/headers.txt'))
     ### Dummy variables for single use only
-    p_id = "8A553145-C12F-409B-A8DD-2FD5BC8DD9EA"
+    p_id = "BFBA0FBE-9726-4BAF-A323-466C69AF51D5"
     s_id = "sw3cz255idhir455hugrmw45"
-    url = "http://www.novasoftware.se/webviewer/(S({}))/MZDesign1.aspx?schoolid=61030&code=77338"
+    url = ("http://www.novasoftware.se/webviewer/(S())/MZDesign1.aspx?"
+           "schoolid={school_id}&"
+           "code={code}".format(
+               school_id=school_id,
+               code=code)
+    )
     ### Some dummy requests to get fresh session ids for urls and cookie in the session
-    s_id = re.search(r"S\((\w+)", s.get(url.format(s_id)).text.encode('utf8'))
+    s_id = re.search(r"S\((\w+)", s.get(url.format(s_id=s_id)).text.encode('utf8'))
     if s_id:
         s_id = s_id.groups()[0]
-    urls['schema'] = url.format(s_id)
+        print "Found s_id", s_id
+    url = url.replace('S())', 'S({}))'.format(s_id))
+    urls['schema'] = url.format(s_id=s_id)
     urls['lesson'] = "http://www.novasoftware.se/webviewer/(S({}))/LessonInfo.aspx".format(s_id)
-    req = Request("POST", urls['schema'], data=elev_basedata.format(p_id=p_id))
-    send(s, req, name="Elev")
-    urls['img'] = "http://www.novasoftware.se/ImgGen/schedulegenerator.aspx?format=png&schoolid=61030/sv-se&type=3&id=%7B{p_id}%7D&period=&week=&mode=0&printer=0&colors=32&head=0&clock=0&foot=0&day=0&width={width}&height={height}&maxwidth={width}&maxheight={height}".format(p_id=p_id, width=width, height=height)
+    req = Request("POST", urls['schema'], data=elev_basedata.format(school_id=school_id, p_id=p_id))
+    send(s, req, name="SESSION_CREATE")
+    urls['img'] = ("http://www.novasoftware.se/ImgGen/schedulegenerator.aspx?"
+                   "format=png&schoolid={school_id}"
+                   "/sv-se&type=3&id=%7B{p_id}%7D&period=&week=&mode=0&"
+                   "printer=0&colors=32&head=0&clock=0&foot=0&day=0&"
+                   "width={width}&"
+                   "height={height}&"
+                   "maxwidth={width}&"
+                   "maxheight={height}".format(
+                       school_id=school_id,
+                       p_id=p_id,
+                       width=width,
+                       height=height
+                   )
+    )
+    for key in urls.keys():
+        print key, urls[key]
     req = Request("GET", urls['img'])
     send(s, req, name="Image")
     return s
