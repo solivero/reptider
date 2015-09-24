@@ -4,14 +4,14 @@ from models import Student
 from flask import render_template, request, g, flash, redirect
 import schema
 
-@app.route('/reptider/', methods=['GET', 'POST'])
+@app.route('/reptider/demo/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         print request.form
-        return redirect('/reptider/{}'.format(request.form['person']))
+        return redirect('/reptider/demo/{}'.format(request.form['person']))
     return render_template('index.html', students=Student.query.all())
 
-@app.route('/reptider/<list:persons>/', methods=['GET', 'POST'])
+@app.route('/reptider/demo/<list:persons>/', methods=['GET', 'POST'])
 def reptider(persons):
     if request.method == 'POST':
         print request.form
@@ -22,7 +22,7 @@ def reptider(persons):
                                             request.form['add']))
         elif request.form['remove'] != None:
             persons.remove(int(request.form['remove']))
-            url = '/reptider/'
+            url = '/reptider/demo/'
             for id in persons:
                 url += str(id) + '+'
             return redirect(url[:-1])
@@ -53,7 +53,7 @@ def reptider(persons):
 
 @app.route('/')
 def no_persons():
-    return redirect('/reptider/')
+    return redirect('/reptider/demo/')
 
 @app.route('/scrape/')
 def scrape():
