@@ -1,9 +1,8 @@
 # -.- coding=utf8 -.-
 from bs4 import BeautifulSoup
-from . import db
+from . import db, log
 from models import Student, Lesson
 from math import floor
-from main import log
 
 
 class Schema:

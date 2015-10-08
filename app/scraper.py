@@ -2,17 +2,20 @@ import re
 import json
 from requests import Session, Request
 from bs4 import BeautifulSoup
-from main import log
+from . import log, db
 from models import Student, Lesson
 
 
 class NovaSchemScraper:
 
-    def __init__(self, code, school_id, width=1820, height=573):
+    def __init__(self, schema, code, school_id, width=1820, height=573):
         self.height = height
         self.width = width
         self.school_id = school_id
         self.code = code
+        self.schema = schema
+        # Don't hardcode like this man
+        self.p_id = "BFBA0FBE-9726-4BAF-A323-466C69AF51D5"
         self.urls = {
             'schema': (
                 "http://www.novasoftware.se/webviewer/(S())/MZDesign1.aspx?"
@@ -36,21 +39,22 @@ class NovaSchemScraper:
                 "maxheight={height}".format(
                     school_id=self.school_id,
                     width=self.width,
-                    height=self.height
+                    height=self.height,
+                    p_id=self.p_id
                 )
             ),
         }
         self.session = None
         postdata = json.load(open('app/static/body.txt'))
-        self.click_basedata = postdata['click'].format(school_id=self.school_id)
-        self.elev_basedata = postdata['elev'].format(school_id=self.school_id)
+        log.debug(postdata)
+        self.click_basedata = postdata['click']
+        self.elev_basedata = postdata['elev']
 
     def make_session(self):
         log.info("Creating session...")
         self.session = Session()
         self.session.headers = json.load(open('app/static/headers.txt'))
         # Dummy variables for single use only
-        p_id = "BFBA0FBE-9726-4BAF-A323-466C69AF51D5"
         s_id = ""
         # Dummy requests to get fresh session ids for urls and cookie in the session
         init_req_data = self.session.get(self.urls['schema']).text.encode('utf8')
@@ -64,15 +68,16 @@ class NovaSchemScraper:
         req = Request(
             "POST",
             self.urls['schema'],
-            data=self.elev_basedata.format(p_id=p_id)
+            data=self.elev_basedata.format(
+                school_id=self.school_id,
+                p_id=self.p_id
+            )
         )
         self.send(req, name="SESSION_CREATE")
-        self.urls['img'] = self.urls['img'].format(
-            p_id=p_id,
-        )
         for key in self.urls.keys():
-            log.info("URL for {}: {}".format(key, self.urls[key]))
+            log.info(u"URL for {}: {}".format(key, self.urls[key]))
         req = Request("GET", self.urls['img'])
+        # Why is his here?
         self.send(req, name="Image")
         return True
 
@@ -84,7 +89,7 @@ class NovaSchemScraper:
             headers={"Content-Length": len(data)}
         )
         resp = self.send(req, name="Click")
-        log.debug("Click response:\n{}".format(resp.text))
+        #log.debug(u"Click response:\n{}".format(resp.text))
         if resp.history:
             req = Request(
                 "GET",
@@ -92,7 +97,7 @@ class NovaSchemScraper:
                 headers={'Referer': self.urls['schema']}
             )
             new_resp = self.send(req, name="Lesson")
-            log.debug("Redirect response:\n{}".format(new_resp.text))
+            #log.debug(u"Redirect response:\n{}".format(new_resp.text))
             return new_resp
         return None
 
@@ -129,6 +134,7 @@ class NovaSchemScraper:
                     for i in range(subdivide_y):
                         y = i * (self.height/subdivide_y) + 23
                         click_data = self.click_basedata.format(
+                            school_id=self.school_id,
                             x=x,
                             y=y,
                             p_id=student.schedule_id
@@ -150,7 +156,7 @@ class NovaSchemScraper:
             f.close()
 
         log.debug((
-            "\n"
+            u"\n"
             "###########################################################"
             "Request info for {}".format(name)
         ))
@@ -164,7 +170,7 @@ class NovaSchemScraper:
             "length": len(html),
         }
         for key, value in info.iteritems():
-            log.debug("{}\t{}: {}".format(name, key, value))
+            log.debug(u"{}\t{}: {}".format(name, key, value))
         return resp
 
     def scrape_IDs(self):
@@ -174,7 +180,8 @@ class NovaSchemScraper:
             "POST",
             self.urls['schema'],
             data=self.elev_basedata.format(
-                p_id="BFBA0FBE-9726-4BAF-A323-466C69AF51D5"
+                school_id=self.school_id,
+                p_id=self.p_id
             )
         )
         resp = self.send(req, name="ID_SCRAPE")
@@ -186,7 +193,7 @@ class NovaSchemScraper:
                 flags=re.U
             )
             if parts:
-                print(parts.groups())
+                log.info(parts.groups())
                 student = Student(
                     schedule_id=find['value'][1:-1],
                     _class=parts.groups()[0],
