@@ -1,5 +1,6 @@
 import re
 import json
+from time import sleep
 from requests import Session, Request
 from bs4 import BeautifulSoup
 from . import log, db
@@ -8,12 +9,12 @@ from models import Student, Lesson
 
 class NovaSchemScraper:
 
-    def __init__(self, schema, code, school_id, width=1820, height=573):
+    def __init__(self, delay, code, school_id, width=1820, height=573):
+        self.delay = delay
         self.height = height
         self.width = width
         self.school_id = school_id
         self.code = code
-        self.schema = schema
         # Don't hardcode like this man
         self.p_id = "BFBA0FBE-9726-4BAF-A323-466C69AF51D5"
         self.urls = {
@@ -101,53 +102,40 @@ class NovaSchemScraper:
             return new_resp
         return None
 
-    def scrape_lessons(self, resume=True, start_id=0):
-        # TODO  Dela upp i scraper och schema
-        # h]r ]r schemalogik
-        if resume:
-            #May give error
-            last_id = db.session.query.max(Lesson.student_id).all()[0][0]
-            if last_id:
-                start_id = last_id
-
-        for student in Student.query.filter(Student.id >= start_id).all():
-            log.info(u"{} {} {} {}".format(
-                student.id,
-                student.first_name,
-                student.last_name,
-                student._class
-                )
+    def scrape_lessons(self, student):
+        lessons = [[], [], [], [], []]
+        for day in range(5):
+            day_width = self.width/5
+            day_x_left = day*(day_width)
+            subdivide_y = 20
+            # TODO HT ELLER VT?? MAKE LOGIC MAN
+            x_values = (
+                day_x_left + int(day_width/3.2),
+                day_x_left + int(day_width/2),
+                day_x_left + int(day_width/1.3)
             )
-            # H]r b[rjar ju sj]lva scrapern
-            for day in range(5):
-                day_width = self.width/5
-                day_x_left = day*(day_width)
-                subdivide_y = 20
-                # TODO HT ELLER VT?? MAKE LOGIC MAN
-                x_values = (
-                    day_x_left + int(day_width/3.2),
-                    day_x_left + int(day_width/2),
-                    day_x_left + int(day_width/1.3)
-                )
-                log.info("Day {}".format(day))
-                for x in x_values:
-                    for i in range(subdivide_y):
-                        y = i * (self.height/subdivide_y) + 23
-                        click_data = self.click_basedata.format(
-                            school_id=self.school_id,
-                            x=x,
-                            y=y,
-                            p_id=student.schedule_id
-                        )
-                        lesson = self.click(click_data)
-                        if lesson:
-                            # TODO Abstract away schema variable if feasible
-                            self.schema.save_lesson(day, student, lesson.text)
+            log.info("Day {}".format(day))
+            for x in x_values:
+                for i in range(subdivide_y):
+                    y = i * (self.height/subdivide_y) + 23
+                    click_data = self.click_basedata.format(
+                        school_id=self.school_id,
+                        x=x,
+                        y=y,
+                        p_id=student.schedule_id
+                    )
+                    lesson = self.click(click_data)
+                    if lesson:
+                        if lesson.text not in lessons[day]:
+                            lessons[day].append(lesson.text)
+            log.info("Found {} lessons day {}".format(len(lessons[day]), day))
+        return lessons
 
     def send(self, req, name="", save=False):
         prep = self.session.prepare_request(req)
         #if (prep.body):
             #prep.headers['Content-Length']= len(prep.body)
+        sleep(delay)
         resp = self.session.send(prep, allow_redirects=True, timeout=10)
         html = resp.text.encode('utf8')
         if save:
